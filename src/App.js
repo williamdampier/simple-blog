@@ -11,6 +11,8 @@ import Loader from './components/UI/Loader/Loader';
 import { usePosts } from './hooks/usePost';
 
 import PostService from './API/PostService';
+import { useFetching } from './hooks/useFetching';
+
 
 
 
@@ -19,7 +21,11 @@ function App() {
   const [filter, setFilter] = useState({sort:'', query:''});
   const [modal, setModal] = useState(false);
   const sortedAndSearchedPosts = usePosts(posts, filter.sort, filter.query);
-  const [isPostloading, setPostLoading] = useState(false);
+  const [fetchPosts, isPostloading, postError] = useFetching(async () => {
+    const posts = await PostService.getAll();
+    setPosts(posts);
+  }
+  )
 
   useEffect( () => {
     fetchPosts();
@@ -30,17 +36,6 @@ function App() {
   const createPost = (newPost) => {
     setPosts([...posts, newPost]);
     setModal(false);
-  }
-
-  async function fetchPosts() {
-    setPostLoading(true);
-    setTimeout(async () => {
-      const posts = await PostService.getAll();
-      setPosts(posts);
-      setPostLoading(false);
-    }, 1000);
- 
-    
   }
 
   const removePost = (post) => {
