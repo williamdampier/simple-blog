@@ -12,6 +12,7 @@ import { usePosts } from './hooks/usePost';
 
 import PostService from './API/PostService';
 import { useFetching } from './hooks/useFetching';
+import { getPageCount, getPagesArray } from './components/utils/pages';
 
 
 
@@ -21,15 +22,25 @@ function App() {
   const [filter, setFilter] = useState({sort:'', query:''});
   const [modal, setModal] = useState(false);
   const sortedAndSearchedPosts = usePosts(posts, filter.sort, filter.query);
-  const [fetchPosts, isPostloading, postError] = useFetching(async () => {
-    const posts = await PostService.getAll();
-    setPosts(posts);
+  const [totalPages, setTotalPages] = useState(0)
+  const [limit, setLimit] = useState(10);
+  const [page,setPage] = useState(1);
+  let pagesArray = getPagesArray(totalPages);
+
+  const [fetchPosts, isPostloading, postError] = useFetching(async (limit, page) => {
+  const response = await PostService.getAll(limit, page);
+    setPosts(response.data);
+    const totalCount = response.headers['x-total-count'];
+    setTotalPages(getPageCount(totalCount, limit));
+    
   }
   )
-
+  
+  
+ 
   useEffect( () => {
-    fetchPosts();
-  }, []);
+    fetchPosts(limit, page);
+  }, [page, limit]);
 
 
  
@@ -44,10 +55,14 @@ function App() {
     );
   }
 
-
+  const changePage = (page) => {
+    setPage(page);
+    fetchPosts(limit,page);
+  
+  }
   return (
     <div className="App">
-    <MyButton onClick={fetchPosts}>GET posts</MyButton>
+      <MyButton onClick={fetchPosts}>GET posts</MyButton>
       <MyButton style={{marginTop: 15}} onClick={() => {setModal(true)}}>Create Post</MyButton>
 
       <MyModal visible={modal} setVisible={setModal}>
@@ -55,21 +70,29 @@ function App() {
       </MyModal>
       
       <hr style={{margin: '15px 0'}}/>
-
+     
       <PostFilter 
       filter={filter} 
       setFilter={setFilter}
       />
-
+      {postError && 
+      <h1>Error occured: ${postError}</h1>}
       {isPostloading
       ? <div style={{display: 'flex', justifyContent: 'center', marginTop: 50}}><Loader/></div>
-      :<PostList 
-      posts={sortedAndSearchedPosts} 
-      title="Posts List 1" 
-      remove={removePost}
-      />
+      :<PostList posts={sortedAndSearchedPosts} title="Posts List 1" remove={removePost}/>
       }
-
+      <div className="page__wrapper">
+        {
+          pagesArray.map(p =>
+          <span 
+          onClick={() => setPage(p)}
+          key={p} 
+          className={page ===p ? 'page page__current': 'page'}>{p}</span>)
+        }
+      </div>
+      
+        
+      
     </div>
   );
 }
