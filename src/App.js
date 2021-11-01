@@ -1,23 +1,14 @@
 import React from 'react';
-import { BrowserRouter, Route, Switch, Redirect} from 'react-router-dom';
+import { BrowserRouter} from 'react-router-dom';
 import NavBar from './components/UI/navbar/NavBar';
-import About from './pages/About';
-import Posts from './pages/Posts';
 import './styles/App.css';
+import AppRouter from './components/AppRouter';
 
 function App() {
   return (
     <BrowserRouter>
       <NavBar/>
-      <Switch>
-        <Route path='/about'>
-          <About/>
-        </Route>
-        <Route path='/posts'>
-          <Posts/>
-        </Route>
-        <Redirect to='/posts'/>
-      </Switch>
+      <AppRouter/>
     </BrowserRouter>
   )
 }

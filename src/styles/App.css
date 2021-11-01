@@ -35,6 +35,9 @@ width: 800px;
 .post-exit {
     opacity: 1;
   }
+.post__btns {
+  display: flex;
+}
 
   .post-exit-active {
     transform: translateX(-350px);
