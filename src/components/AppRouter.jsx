@@ -6,12 +6,12 @@ import { publicRoutes, privateRoutes } from "../router/routes";
 import Loader from "./UI/Loader/Loader";
 
 const AppRouter = () => {
-    const {isAuth} = useContext(AuthContext);
+    const {isAuth, isLoading} = useContext(AuthContext);
     console.log(isAuth)
 
-    // if (isLoading) {
-    //     return <Loader/>
-    // }
+    if (isLoading) {
+        return <Loader/>
+    }
 
     return (
         isAuth

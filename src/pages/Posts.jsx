@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import PostForm from '../components/PostForm'
 import PostList from '../components/PostList';
@@ -14,6 +14,8 @@ import PostService from '../API/PostService';
 import { useFetching } from '../hooks/useFetching';
 import { getPageCount} from '../components/utils/pages';
 import Pagination from '../components/UI/pagination/Pagination';
+import { useObserver } from '../hooks/useObserver';
+import MySelect from '../components/UI/select/MySelect';
 
 
 
@@ -26,17 +28,19 @@ function Posts() {
   const [totalPages, setTotalPages] = useState(0)
   const [limit, setLimit] = useState(10);
   const [page,setPage] = useState(1);
-
+  const lastElement = useRef();
 
   const [fetchPosts, isPostloading, postError] = useFetching(async (limit, page) => {
   const response = await PostService.getAll(limit, page);
-    setPosts(response.data);
+    setPosts([...posts, ...response.data]);
     const totalCount = response.headers['x-total-count'];
     setTotalPages(getPageCount(totalCount, limit));
     
-  }
-  )
+  })
   
+  useObserver(lastElement, page < totalPages, isPostloading, () => {
+    setPage(page + 1);
+  } )
   
  
   useEffect( () => {
@@ -58,12 +62,12 @@ function Posts() {
 
   const changePage = (page) => {
     setPage(page);
-    fetchPosts(limit,page);
+   
   
   }
   return (
     <div className="App">
-      <MyButton onClick={fetchPosts}>GET posts</MyButton>
+      
       <MyButton style={{marginTop: 15}} onClick={() => {setModal(true)}}>Create Post</MyButton>
 
       <MyModal visible={modal} setVisible={setModal}>
@@ -76,11 +80,26 @@ function Posts() {
       filter={filter} 
       setFilter={setFilter}
       />
+
+      <MySelect 
+        value={limit}
+        onChange={value => setLimit(value)}
+        defaultValue="Number of items on page"
+        options={[
+          {value:5, name:'5'}, 
+          {value:10, name:'10'},
+          {value:25, name:'25'},
+          {value:-1, name:'Show All'}
+          ]
+
+        }/>
       {postError && 
       <h1>Error occured: ${postError}</h1>}
-      {isPostloading
-      ? <div style={{display: 'flex', justifyContent: 'center', marginTop: 50}}><Loader/></div>
-      :<PostList posts={sortedAndSearchedPosts} title="Posts List 1" remove={removePost}/>
+      <PostList posts={sortedAndSearchedPosts} title="Posts List 1" remove={removePost}/>
+      <div ref={lastElement} style={{height: 20, background: 'teal'}}></div>
+      {isPostloading &&
+       <div style={{display: 'flex', justifyContent: 'center', marginTop: 50}}><Loader/></div>
+      
       }
 
       <Pagination 
